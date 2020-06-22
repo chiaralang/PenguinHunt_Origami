@@ -10,5 +10,5 @@ class IceFloe (x: Number = 0.0,
                fillColor: RGBA = Colors.BLACK,
                strokeColor: RGBA = Colors.RED,
                strokeThickness : Number = 0.0)
-    : Rechteck (x, y, width, height, fillColor, strokeColor, strokeThickness) {
+    : Rechteck (x, y, height, width, fillColor, strokeColor, strokeThickness) {
 }

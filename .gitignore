@@ -3,3 +3,5 @@
 /build/
 /build/classes/kotlin/js/main/
 /.idea/
+/src/commonMain/kotlin/EngineEmi/
+/.gitignore
