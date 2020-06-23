@@ -1,3 +1,4 @@
+import EngineEmi.graphics.bild.Bild
 import com.soywiz.korev.Key
 import com.soywiz.korge.view.addUpdater
 import com.soywiz.korim.color.Colors
@@ -6,8 +7,6 @@ import me.emig.engineEmi.*
 val engineConfig = EngineConfig(width = 1600, height = 750)
 
 suspend fun main() = Engine(engineConfig) {
-	//val hut = Bild(150,20,"hut.png")
-	//addChild(hut)
 
 	val input = views.input
 
@@ -18,6 +17,7 @@ suspend fun main() = Engine(engineConfig) {
 
 	val iceFloe1 = IceFloe(100, 600, 1000, 50, 3.0)
 	addChild(iceFloe1)
+
 	//val iceFloe2 = IceFloe(iceFloe1.width + 10, 0, 1000, 50, 3.0, Colors.PURPLE)
 	//addChild(iceFloe2)
 	//val iceFloe3 = IceFloe(1100, 0, 1000, 50, 3.0, Colors.PURPLE)
@@ -25,28 +25,29 @@ suspend fun main() = Engine(engineConfig) {
 
 
 	val ay = 100.0 //Beschleunigung in y-Richtung -> ≙ Erdanziehung g
-	val ax = 10.0 //Beschleunigung in x-Richtung -> Schwierigkeitsgrad erhöhen
+	val ax = -10.0 //Beschleunigung in x-Richtung -> Schwierigkeitsgrad erhöhen
 
-	//vy -> Geschwindigkeit in y-Richtung (Pinguin)
-	//vx -> Geschwindigkeit in x-Richtung (Eisscholle)
+    fun move(p: Double, v: Double, a: Double, dt: Double) : Pair<Double, Double> {
+        val vAlt = v
+        val vNeu = v + (a)*dt
 
+        val pNeu = p + 0.5*(vAlt + vNeu) * dt
+
+        return Pair(pNeu, vNeu)
+    }
 
 	addUpdater { dt ->
 		//iceFloe wird in x Richtung mit ax beschleunigt
-		val ifvxAlt = iceFloe1.vx
-		val ifvxNeu = iceFloe1.vx + (-ax)*dt.seconds
-
-		iceFloe1.x += 0.5*(ifvxAlt + ifvxNeu) * dt.seconds
-
-		iceFloe1.vx = ifvxNeu
+        val (x, vx) = move(iceFloe1.x, iceFloe1.vx, ax, dt.seconds)
+        iceFloe1.x = x
+        iceFloe1.vx = vx
 
 		//penguin wird in y Richtung mit ay beschleunigt
-		val pvyAlt = penguin.vy
-		val pvyNeu = penguin.vy + ay*dt.seconds
+		val (y, vy) = move(penguin.y, penguin.vy, ay, dt.seconds)
+        penguin.y = y
+        penguin.vy = vy
 
-		penguin.y += 0.5*(pvyAlt + pvyNeu) * dt.seconds
 
-		penguin.vy = pvyNeu
 
 		//penguin wird auf exakte(kann je nah frame auch etwas darunter sein) Schollenhöhe, wenn er die Scholle trifft, wenn nicht fällt er hinunter
 		if (penguin.y + penguin.height >= iceFloe1.y && penguin.x < iceFloe1.x + iceFloe1.width && penguin.x > iceFloe1.x) {
@@ -59,5 +60,8 @@ suspend fun main() = Engine(engineConfig) {
 		}
 
 	}
+
+	//val background = Bild(0, 0, "vorübergehenderBackground.jpg")
+	//addChild(background)
 
 }
