@@ -1,6 +1,7 @@
 import EngineEmi.graphics.bild.Bild
 import com.soywiz.korev.Key
 import com.soywiz.korge.view.addUpdater
+import com.soywiz.korge.view.collidesWith
 import com.soywiz.korim.color.Colors
 import me.emig.engineEmi.*
 
@@ -15,14 +16,13 @@ suspend fun main() = Engine(engineConfig) {
 
     val spaceArray : DoubleArray =  doubleArrayOf(10.0, 50.0, 200.0)
 
-	val iceFloe1 = IceFloe(100, 600, 1000, 50, 3.0)
-	addChild(iceFloe1)
 
-	//val iceFloe2 = IceFloe(iceFloe1.width + 10, 0, 1000, 50, 3.0, Colors.PURPLE)
-	//addChild(iceFloe2)
-	//val iceFloe3 = IceFloe(1100, 0, 1000, 50, 3.0, Colors.PURPLE)
-	//iceFloe1.addChild(iceFloe3)
 
+    val iceFloes = arrayOf<IceFloe> ( IceFloe(100, 600, 1000, 50), IceFloe(1200, 600, 1000, 50) )
+    addChild(iceFloes[0])
+    addChild(iceFloes[1])
+
+    var iceFloesVx = 5.0
 
 	val ay = 100.0 //Beschleunigung in y-Richtung -> ≙ Erdanziehung g
 	val ax = -10.0 //Beschleunigung in x-Richtung -> Schwierigkeitsgrad erhöhen
@@ -36,28 +36,39 @@ suspend fun main() = Engine(engineConfig) {
         return Pair(pNeu, vNeu)
     }
 
-	addUpdater { dt ->
-		//iceFloe wird in x Richtung mit ax beschleunigt
-        val (x, vx) = move(iceFloe1.x, iceFloe1.vx, ax, dt.seconds)
-        iceFloe1.x = x
-        iceFloe1.vx = vx
+    fun collidesWith(player : Player, iceFloe : IceFloe) : Boolean {
+        return (player.y + player.height >= iceFloe.y &&
+                player.x < iceFloe.x + iceFloe.width &&
+                player.x > iceFloe.x)
 
-		//penguin wird in y Richtung mit ay beschleunigt
-		val (y, vy) = move(penguin.y, penguin.vy, ay, dt.seconds)
+    }
+
+	addUpdater { dt ->
+		//iceFloes werden in x Richtung mit ax beschleunigt
+        var newVx : Double = 0.0
+        iceFloes.forEach {
+            val (x1, vx1) = move(it.x, iceFloesVx, ax, dt.seconds)
+            it.x = x1
+            newVx = vx1
+        }
+        iceFloesVx = newVx
+
+        //penguin wird in y Richtung mit ay beschleunigt
+        val (y, vy) = move(penguin.y, penguin.vy, ay, dt.seconds)
         penguin.y = y
         penguin.vy = vy
 
+        //penguin wird auf exakte(kann je nah frame auch etwas darunter sein) Schollenhöhe, wenn er die Scholle trifft, wenn nicht fällt er hinunter
+        iceFloes.forEach {
+           if (collidesWith(penguin, it)){
+               penguin.y = it.y - penguin.height
+           }
+        }
 
-
-		//penguin wird auf exakte(kann je nah frame auch etwas darunter sein) Schollenhöhe, wenn er die Scholle trifft, wenn nicht fällt er hinunter
-		if (penguin.y + penguin.height >= iceFloe1.y && penguin.x < iceFloe1.x + iceFloe1.width && penguin.x > iceFloe1.x) {
-			penguin.y = iceFloe1.y - penguin.height
-		}
-
-		//penguin springt mit vy 150 ab, wenn man die Pfeiltaste nach oben drückt
-		if (input.keys[Key.UP]) {
-			penguin.vy = -150.0
-		}
+        //penguin springt mit vy 150 ab, wenn man die Pfeiltaste nach oben drückt
+        if (input.keys[Key.UP]) {
+            penguin.vy = -150.0
+        }
 
 	}
 
