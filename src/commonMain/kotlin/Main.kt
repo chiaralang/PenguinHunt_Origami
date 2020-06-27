@@ -1,22 +1,17 @@
-import EngineEmi.graphics.bild.Bild
 import com.soywiz.korev.Key
 import com.soywiz.korge.view.addUpdater
-import com.soywiz.korge.view.collidesWith
 import com.soywiz.korim.color.Colors
 import me.emig.engineEmi.*
+
 
 val engineConfig = EngineConfig(width = 1600, height = 750)
 
 suspend fun main() = Engine(engineConfig) {
 
-	val input = views.input
+    val input = views.input
 
 	val penguin = Player (100, 100, 20, 50, 0.0, Colors.RED)
 	addChild(penguin)
-
-    val spaceArray : DoubleArray =  doubleArrayOf(10.0, 50.0, 200.0)
-
-
 
     val iceFloes = arrayOf<IceFloe> ( IceFloe(100, 600, 1000, 50), IceFloe(1200, 600, 1000, 50) )
     addChild(iceFloes[0])
@@ -37,10 +32,16 @@ suspend fun main() = Engine(engineConfig) {
     }
 
     fun collidesWith(player : Player, iceFloe : IceFloe) : Boolean {
-        return (player.y + player.height >= iceFloe.y &&
+        return (player.y + player.height > iceFloe.y &&
                 player.x < iceFloe.x + iceFloe.width &&
-                player.x > iceFloe.x)
+                player.x + player.width/2 > iceFloe.x)
 
+    }
+
+    fun removeIceFloes(iceFloe: IceFloe){
+        if (iceFloe.x + iceFloe.width == 0.0){
+            removeChild(iceFloe)
+        }
     }
 
 	addUpdater { dt ->
@@ -53,12 +54,19 @@ suspend fun main() = Engine(engineConfig) {
         }
         iceFloesVx = newVx
 
+        //iceFloes werden entfernt sobald sie den View verlassen
+        iceFloes.forEach{
+            removeIceFloes(it)
+        }
+
         //penguin wird in y Richtung mit ay beschleunigt
         val (y, vy) = move(penguin.y, penguin.vy, ay, dt.seconds)
         penguin.y = y
         penguin.vy = vy
 
-        //penguin wird auf exakte(kann je nah frame auch etwas darunter sein) Schollenhöhe, wenn er die Scholle trifft, wenn nicht fällt er hinunter
+        //penguin wird auf exakte(kann je nah frame auch etwas darunter sein) Schollenhöhe gesetzt,
+        //wenn er die Scholle trifft, wenn nicht fällt er hinunter
+        //ABER wird wieder zurückgesetzt, wenn er unter Eisscholle ist
         iceFloes.forEach {
            if (collidesWith(penguin, it)){
                penguin.y = it.y - penguin.height
@@ -75,4 +83,5 @@ suspend fun main() = Engine(engineConfig) {
 	//val background = Bild(0, 0, "vorübergehenderBackground.jpg")
 	//addChild(background)
 
+    val spaceArray : DoubleArray =  doubleArrayOf(10.0, 50.0, 200.0)
 }
