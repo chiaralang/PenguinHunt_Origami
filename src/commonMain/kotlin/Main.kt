@@ -33,15 +33,10 @@ suspend fun main() = Engine(engineConfig) {
 
     fun collidesWith(player : Player, iceFloe : IceFloe) : Boolean {
         return (player.y + player.height > iceFloe.y &&
-                player.x < iceFloe.x + iceFloe.width &&
-                player.x + player.width/2 > iceFloe.x)
+                player.y + player.height < iceFloe.y + iceFloe.height &&
+                player.x + player.width > iceFloe.x &&
+                player.x < iceFloe.x + iceFloe.width)//player.x + player.width < iceFloe.x + iceFloe.width
 
-    }
-
-    fun removeIceFloes(iceFloe: IceFloe){
-        if (iceFloe.x + iceFloe.width == 0.0){
-            removeChild(iceFloe)
-        }
     }
 
 	addUpdater { dt ->
@@ -54,34 +49,40 @@ suspend fun main() = Engine(engineConfig) {
         }
         iceFloesVx = newVx
 
-        //iceFloes werden entfernt sobald sie den View verlassen
-        iceFloes.forEach{
-            removeIceFloes(it)
-        }
+
+        val yAltPenguin = penguin.y
 
         //penguin wird in y Richtung mit ay beschleunigt
         val (y, vy) = move(penguin.y, penguin.vy, ay, dt.seconds)
         penguin.y = y
         penguin.vy = vy
 
-        //penguin wird auf exakte(kann je nah frame auch etwas darunter sein) Schollenhöhe gesetzt,
-        //wenn er die Scholle trifft, wenn nicht fällt er hinunter
-        //ABER wird wieder zurückgesetzt, wenn er unter Eisscholle ist
+        //penguin wird auf Schollenhöhe gesetzt, wenn er auf der Scholle landet,
+        //wenn nicht fällt er hinunter + wird vor ihr hergeschoben
+
         iceFloes.forEach {
            if (collidesWith(penguin, it)){
-               penguin.y = it.y - penguin.height
+               if (yAltPenguin + penguin.height <= it.y){
+                   penguin.y = it.y - penguin.height
+                   penguin.vy = 0.0
+               } else {
+                   penguin.x = it.x - penguin.width
+               }
            }
         }
 
+
         //penguin springt mit vy 150 ab, wenn man die Pfeiltaste nach oben drückt
-        if (input.keys[Key.UP]) {
-            penguin.vy = -150.0
+        iceFloes.forEach {
+            if (penguin.y == it.y - penguin.height){
+                    if (input.keys[Key.UP]) {
+                        penguin.vy = -150.0
+                    }
+            }
         }
 
 	}
 
 	//val background = Bild(0, 0, "vorübergehenderBackground.jpg")
 	//addChild(background)
-
-    val spaceArray : DoubleArray =  doubleArrayOf(10.0, 50.0, 200.0)
 }
