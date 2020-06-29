@@ -13,22 +13,23 @@ suspend fun main() = Engine(engineConfig) {
 	val penguin = Player (100, 100, 20, 50, 0.0, Colors.RED)
 	addChild(penguin)
 
-    val iceFloes = arrayOf<IceFloe> ( IceFloe(100, 600, 1000, 50), IceFloe(1200, 600, 1000, 50) )
-    addChild(iceFloes[0])
-    addChild(iceFloes[1])
+    val iceFloes = mutableListOf<IceFloe>(  IceFloe(0.0, 600.0, 750),
+                                            IceFloe(850.0, 600.0, 300),
+                                            IceFloe(1300.0, 600.0, 450))
+
+    iceFloes.forEach{ addChild(it) }
 
     var iceFloesVx = 5.0
 
 	val ay = 100.0 //Beschleunigung in y-Richtung -> ≙ Erdanziehung g
 	val ax = -10.0 //Beschleunigung in x-Richtung -> Schwierigkeitsgrad erhöhen
 
+
     fun move(p: Double, v: Double, a: Double, dt: Double) : Pair<Double, Double> {
-        val vAlt = v
         val vNeu = v + (a)*dt
-
-        val pNeu = p + 0.5*(vAlt + vNeu) * dt
-
+        val pNeu = p + 0.5*(v + vNeu) * dt
         return Pair(pNeu, vNeu)
+        //val vAlt = v / val vNeu = v + (a)*dt / val pNeu = p + 0.5*(vAlt + vNeu) * dt
     }
 
     fun collidesWith(player : Player, iceFloe : IceFloe) : Boolean {
@@ -39,8 +40,25 @@ suspend fun main() = Engine(engineConfig) {
 
     }
 
+    fun createIceFloe (){
+        val differentSpaces : DoubleArray =  doubleArrayOf(150.0, 200.0, 300.0)
+        val differentYs : DoubleArray =  doubleArrayOf(550.0, 600.0)
+        val differentWidths : DoubleArray =  doubleArrayOf(100.0, 150.0, 200.0, 300.0)
+        if (iceFloes[iceFloes.size-1].x+ iceFloes[iceFloes.size-1].width + differentSpaces.random()
+                <= engineConfig.width.toDouble()) {
+            iceFloes += IceFloe(engineConfig.width, differentYs.random(), differentWidths.random())
+            addChild(iceFloes[iceFloes.size-1])
+        }
+    }
+
+    fun removeIceFloes(iceFloe: IceFloe){
+        if (iceFloe.x + iceFloe.width == 0.0){
+            removeChild(iceFloe)
+        }
+    }
+
 	addUpdater { dt ->
-		//iceFloes werden in x Richtung mit ax beschleunigt
+        //iceFloes werden in x Richtung mit ax beschleunigt
         var newVx : Double = 0.0
         iceFloes.forEach {
             val (x1, vx1) = move(it.x, iceFloesVx, ax, dt.seconds)
@@ -49,6 +67,12 @@ suspend fun main() = Engine(engineConfig) {
         }
         iceFloesVx = newVx
 
+        createIceFloe()
+
+        //iceFloes werden entfernt sobald sie den View verlassen
+        iceFloes.forEach{
+            removeIceFloes(it)
+        }
 
         val yAltPenguin = penguin.y
 
@@ -72,12 +96,12 @@ suspend fun main() = Engine(engineConfig) {
         }
 
 
-        //penguin springt mit vy 150 ab, wenn man die Pfeiltaste nach oben drückt
+        //penguin springt mit vy 150 ab, wenn man die Leertaste drückt
         iceFloes.forEach {
             if (penguin.y == it.y - penguin.height){
-                    if (input.keys[Key.UP]) {
-                        penguin.vy = -150.0
-                    }
+                if (input.keys[Key.SPACE]) {
+                    penguin.vy = -150.0
+                }
             }
         }
 
@@ -85,4 +109,5 @@ suspend fun main() = Engine(engineConfig) {
 
 	//val background = Bild(0, 0, "vorübergehenderBackground.jpg")
 	//addChild(background)
+
 }
