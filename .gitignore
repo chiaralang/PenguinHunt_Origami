@@ -4,4 +4,5 @@
 /build/classes/kotlin/js/main/
 /.idea/
 /src/commonMain/kotlin/EngineEmi/
+/src/commonMain/resources/
 /.gitignore
